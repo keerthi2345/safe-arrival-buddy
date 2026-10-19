@@ -1,14 +1,26 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from . import models  # noqa: F401  (registers tables with Base)
 from .config import settings
-from .database import get_db
+from .database import Base, engine, get_db
+from .routers import auth
 
-app = FastAPI(title=settings.app_name, version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)  # we'll switch to Alembic migrations later
+    yield
+
+
+app = FastAPI(title=settings.app_name, version="0.2.0", lifespan=lifespan)
+app.include_router(auth.router)
 
 
 @app.get("/health", tags=["system"])
 def health(db: Session = Depends(get_db)):
-    db.execute(text("SELECT 1"))  # proves the DB connection works
+    db.execute(text("SELECT 1"))
     return {"status": "ok", "app": settings.app_name}
