@@ -29,3 +29,28 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class BuddyCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+
+
+class BuddyOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: EmailStr
+    priority: int
+    status: str
+    confirmed_at: datetime | None
+    created_at: datetime
+
+
+class ConfirmRequest(BaseModel):
+    token: str = Field(min_length=10, max_length=200)
+
+
+class ConfirmOut(BaseModel):
+    traveller_name: str
+    buddy_name: str

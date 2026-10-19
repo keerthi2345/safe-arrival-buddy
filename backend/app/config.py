@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     model_config = SettingsConfigDict(env_file=".env")
+    frontend_url: str = "http://localhost:5173"
+    confirm_token_expire_hours: int = 48
+    max_buddies: int = 5
 
 
 settings = Settings()

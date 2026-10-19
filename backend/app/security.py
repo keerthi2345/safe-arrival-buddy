@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
-
+import hashlib
+import secrets
 import bcrypt
 import jwt
 
@@ -30,3 +31,12 @@ def decode_access_token(token: str) -> int | None:
         return int(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         return None
+
+def hash_token(raw: str) -> str:
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def generate_token() -> tuple[str, str]:
+    """Return (raw_token, hash). Email the raw one; store only the hash."""
+    raw = secrets.token_urlsafe(32)
+    return raw, hash_token(raw)

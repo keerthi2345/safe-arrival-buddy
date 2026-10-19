@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from . import models  # noqa: F401  (registers tables with Base)
 from .config import settings
 from .database import Base, engine, get_db
-from .routers import auth , users          # add users to this import
+from .routers import auth, buddies , users          # add users to this import
 
 
 @asynccontextmanager
@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.app_name, version="0.2.0", lifespan=lifespan)
 app.include_router(auth.router)
+app.include_router(buddies.router) 
 app.include_router(users.router)
 
 

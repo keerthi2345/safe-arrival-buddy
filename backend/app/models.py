@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -18,3 +18,29 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(100))
     password_hash: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+def as_utc(dt: datetime) -> datetime:
+    """SQLite returns naive datetimes; treat them as UTC so comparisons work."""
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+class Buddy(Base):
+    __tablename__ = "buddies"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(255))
+    priority: Mapped[int] = mapped_column(Integer)  # 1 = alerted first
+    confirm_token_hash: Mapped[str | None] = mapped_column(String(64), index=True)
+    confirm_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    @property
+    def status(self) -> str:
+        # Derived from timestamps, so status can never disagree with the data
+        if self.revoked_at:
+            return "revoked"
+        return "confirmed" if self.confirmed_at else "pending"

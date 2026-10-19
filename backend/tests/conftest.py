@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
-
+from app.notifications import sent_messages
 
 @pytest.fixture()
 def client():
@@ -41,3 +41,7 @@ def auth_headers(client):
         data={"username": "asha@example.com", "password": "strongpass123"},
     )
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+@pytest.fixture(autouse=True)
+def clear_outbox():
+    sent_messages.clear()
