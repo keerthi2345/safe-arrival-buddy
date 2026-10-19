@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     confirm_token_expire_hours: int = 48
     max_buddies: int = 5
+    default_grace_minutes: int = 10
+    max_active_trips: int = 3
 
 
 settings = Settings()

@@ -54,3 +54,27 @@ class ConfirmRequest(BaseModel):
 class ConfirmOut(BaseModel):
     traveller_name: str
     buddy_name: str
+
+class TripCreate(BaseModel):
+    label: str = Field(default="", max_length=100)
+    note: str = Field(default="", max_length=500)
+    deadline: datetime
+    grace_minutes: int | None = Field(default=None, ge=1, le=120)
+
+
+class TripExtend(BaseModel):
+    deadline: datetime
+
+
+class TripOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    label: str
+    note: str
+    deadline: datetime
+    grace_minutes: int
+    status: str
+    created_at: datetime
+    safe_at: datetime | None
+    alerted_at: datetime | None
