@@ -78,3 +78,15 @@ class TripOut(BaseModel):
     created_at: datetime
     safe_at: datetime | None
     alerted_at: datetime | None
+
+class DeliveryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    buddy_email: str
+    kind: str
+    status: str
+    attempts: int
+    error: str
+    created_at: datetime
+    last_attempt_at: datetime | None

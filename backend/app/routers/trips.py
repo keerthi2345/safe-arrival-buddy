@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import Trip, User, as_utc, utcnow
-from ..schemas import TripCreate, TripExtend, TripOut
+from ..models import Trip, User, as_utc, utcnow, DeliveryLog
+from ..schemas import TripCreate, TripExtend, TripOut, DeliveryOut
 from ..trip_rules import extend_deadline, transition
 
 router = APIRouter(prefix="/trips", tags=["trips"])
@@ -84,3 +84,12 @@ def extend_trip(
     db.commit()
     db.refresh(trip)
     return trip
+
+@router.get("/{trip_id}/deliveries", response_model=list[DeliveryOut])
+def trip_deliveries(
+    trip_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+):
+    _own_trip(db, user, trip_id)
+    return db.scalars(
+        select(DeliveryLog).where(DeliveryLog.trip_id == trip_id).order_by(DeliveryLog.id)
+    ).all()

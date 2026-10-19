@@ -58,3 +58,17 @@ class Trip(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     safe_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     alerted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+class DeliveryLog(Base):
+    __tablename__ = "delivery_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    trip_id: Mapped[int] = mapped_column(ForeignKey("trips.id"), index=True)
+    buddy_email: Mapped[str] = mapped_column(String(255), default="")
+    kind: Mapped[str] = mapped_column(String(20), default="alert")
+    # pending, sent, failed, cancelled, no_buddies
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

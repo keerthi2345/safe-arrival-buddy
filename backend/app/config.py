@@ -13,6 +13,14 @@ class Settings(BaseSettings):
     max_buddies: int = 5
     default_grace_minutes: int = 10
     max_active_trips: int = 3
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    scheduler_enabled: bool = True
+    check_interval_seconds: int = 30
+    max_delivery_attempts: int = 3
 
 
 settings = Settings()
