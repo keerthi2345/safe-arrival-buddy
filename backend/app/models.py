@@ -19,9 +19,10 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
-def as_utc(dt: datetime) -> datetime:
-    """SQLite returns naive datetimes; treat them as UTC so comparisons work."""
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+def as_utc(dt):
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 class Buddy(Base):

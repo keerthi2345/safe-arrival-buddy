@@ -118,3 +118,13 @@ def test_user_cannot_modify_other_users_trips(client, auth_headers):
     r = client.post(f"/trips/{trip_id}/extend", json={"deadline": future(120)}, headers=other)
     assert r.status_code == 404
     assert client.get(f"/trips/{trip_id}", headers=auth_headers).json()["status"] == "active"
+
+def test_deadline_with_offset_is_stored_as_utc(client, auth_headers):
+    ist = timezone(timedelta(hours=5, minutes=30))
+    local = datetime.now(ist) + timedelta(minutes=60)
+    r = client.post("/trips", json={"deadline": local.isoformat()}, headers=auth_headers)
+    assert r.status_code == 201
+    stored = datetime.fromisoformat(r.json()["deadline"])
+    if stored.tzinfo is None:
+        stored = stored.replace(tzinfo=timezone.utc)
+    assert abs((stored - local).total_seconds()) < 2
