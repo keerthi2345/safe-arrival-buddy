@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,5 +24,17 @@ class Settings(BaseSettings):
     max_delivery_attempts: int = 3
     # frontend_url: str = "http://localhost:5173"
     escalation_minutes: int = 10
+    demo_mode: bool = False
+
+    @property
+    def minute(self) -> timedelta:
+        # in demo mode, one "minute" of grace/escalation lasts one second
+        return timedelta(seconds=1) if self.demo_mode else timedelta(minutes=1)
+
+    @property
+    def tick_seconds(self) -> int:
+        if self.demo_mode:
+            return min(self.check_interval_seconds, 5)
+        return self.check_interval_seconds
 
 settings = Settings()

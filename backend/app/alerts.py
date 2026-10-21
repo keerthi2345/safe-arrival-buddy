@@ -88,7 +88,7 @@ def retry_failed(db: Session) -> int:
 
 def escalate_unacknowledged(db: Session, now: datetime | None = None) -> int:
     now = now or utcnow()
-    cutoff = now - timedelta(minutes=settings.escalation_minutes)
+    cutoff = now - settings.escalation_minutes * settings.minute
     escalated = 0
     for trip in db.scalars(select(Trip).where(Trip.status == "alerted")).all():
         logs = db.scalars(select(DeliveryLog).where(DeliveryLog.trip_id == trip.id)).all()

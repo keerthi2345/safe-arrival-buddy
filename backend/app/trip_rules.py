@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
-
 from fastapi import HTTPException
-
 from .models import Trip, as_utc, utcnow
+from .config import settings
 
 # The only legal moves. Anything else is refused.
 ALLOWED = {
@@ -32,4 +31,4 @@ def extend_deadline(trip: Trip, new_deadline: datetime) -> None:
 
 
 def alert_time(trip: Trip) -> datetime:
-    return as_utc(trip.deadline) + timedelta(minutes=trip.grace_minutes)
+    return as_utc(trip.deadline) + trip.grace_minutes * settings.minute

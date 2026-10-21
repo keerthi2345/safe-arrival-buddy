@@ -21,4 +21,4 @@ def _tick() -> None:
 async def scheduler_loop() -> None:
     while True:
         await asyncio.to_thread(_tick)
-        await asyncio.sleep(settings.check_interval_seconds)
+        await asyncio.sleep(settings.tick_seconds)
