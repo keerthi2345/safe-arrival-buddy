@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     scheduler_enabled: bool = True
     check_interval_seconds: int = 30
     max_delivery_attempts: int = 3
-
+    # frontend_url: str = "http://localhost:5173"
+    escalation_minutes: int = 10
 
 settings = Settings()

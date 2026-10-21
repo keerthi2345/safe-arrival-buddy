@@ -73,3 +73,5 @@ class DeliveryLog(Base):
     error: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    level: Mapped[int] = mapped_column(Integer, default=1)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

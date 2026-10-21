@@ -90,3 +90,15 @@ class DeliveryOut(BaseModel):
     error: str
     created_at: datetime
     last_attempt_at: datetime | None
+    level: int
+    acknowledged_at: datetime | None
+
+class WatchOut(BaseModel):
+    traveller_name: str
+    label: str
+    note: str
+    deadline: datetime
+    status: str
+    alerted_at: datetime | None
+    safe_at: datetime | None
+    acknowledged: bool
