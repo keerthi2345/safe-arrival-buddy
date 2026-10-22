@@ -176,10 +176,9 @@ Full interactive documentation is at `/docs`.
 - Buddy order is the order they were added.
 - Database tables are created automatically at startup. A migration tool such as Alembic would be the next step for schema changes.
 
-## Roadmap
+## Future scope
 
-- SMS and Telegram alerts
-- Reorder buddies
+- SMS and Telegram alerts (the email sender is isolated in `mailer.py`, so new channels plug in there)
 - Share the watch link through WhatsApp
-- Email the buddy list when a trip starts
-- Alembic migrations
+- Email confirmed buddies the watch link when a trip starts, not only when it becomes overdue
+- Let travellers reorder their buddies
