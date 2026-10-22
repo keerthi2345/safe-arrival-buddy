@@ -45,3 +45,14 @@ def auth_headers(client):
 @pytest.fixture(autouse=True)
 def clear_outbox():
     sent_messages.clear()
+
+@pytest.fixture(autouse=True)
+def no_real_email(monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "smtp_user", "")
+    monkeypatch.setattr(settings, "brevo_api_key", "")
+
+@pytest.fixture(autouse=True)
+def fixed_escalation_timeout(monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "escalation_minutes", 10)

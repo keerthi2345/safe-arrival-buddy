@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import settings
-from ..database import get_db
+from ..database import Base,get_db
 from ..deps import get_current_user
 from ..models import Trip, User, as_utc, utcnow, DeliveryLog
 from ..schemas import TripCreate, TripExtend, TripOut, DeliveryOut
@@ -93,3 +93,14 @@ def trip_deliveries(
     return db.scalars(
         select(DeliveryLog).where(DeliveryLog.trip_id == trip_id).order_by(DeliveryLog.id)
     ).all()
+
+@router.delete("/{trip_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_trip(trip_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    trip = _own_trip(db, user, trip_id)
+    # Remove child rows (watch links, delivery log, ...) in dependency order
+    for table in reversed(Base.metadata.sorted_tables):
+        if "trip_id" in table.c:
+            db.execute(table.delete().where(table.c.trip_id == trip.id))
+    db.delete(trip)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

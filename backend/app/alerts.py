@@ -1,21 +1,30 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .delivery import send_email
+from .mailer import send_email
 from .models import Buddy, DeliveryLog, Trip, User, as_utc, utcnow
 from .trip_rules import alert_time, transition
 from .watch_links import watch_url
 
 
 def confirmed_buddies(db: Session, user_id: int):
-    # ADJUST: change the confirmed condition to match your Buddy model
-    # (e.g. Buddy.confirmed.is_(True) if you use a boolean)
+    """Accepted, not removed, in alert order (priority 1 first)."""
     return db.scalars(
-        select(Buddy).where(Buddy.user_id == user_id, Buddy.confirmed_at.is_not(None)).order_by(Buddy.id)
+        select(Buddy)
+        .where(
+            Buddy.user_id == user_id,
+            Buddy.confirmed_at.is_not(None),
+            Buddy.revoked_at.is_(None),
+        )
+        .order_by(Buddy.priority, Buddy.id)
     ).all()
+
+
+def _fmt(dt: datetime) -> str:
+    return as_utc(dt).strftime("%d %b %Y, %H:%M UTC")
 
 
 def alert_message(trip: Trip, user: User, link: str) -> tuple[str, str]:
@@ -23,7 +32,7 @@ def alert_message(trip: Trip, user: User, link: str) -> tuple[str, str]:
     subject = f"[Safe Arrival] {user.name} has not checked in"
     body = (
         f"{user.name} has not confirmed arrival for: {label}.\n"
-        f"Expected by: {trip.deadline.isoformat()} (plus {trip.grace_minutes} min grace).\n"
+        f"Expected by: {_fmt(trip.deadline)} (plus {trip.grace_minutes} min grace).\n"
     )
     if trip.note:
         body += f"Note from {user.name}: {trip.note}\n"
@@ -87,23 +96,31 @@ def retry_failed(db: Session) -> int:
 
 
 def escalate_unacknowledged(db: Session, now: datetime | None = None) -> int:
+    """Alert the next buddy if nobody has acknowledged within escalation_minutes."""
     now = now or utcnow()
     cutoff = now - settings.escalation_minutes * settings.minute
     escalated = 0
     for trip in db.scalars(select(Trip).where(Trip.status == "alerted")).all():
-        logs = db.scalars(select(DeliveryLog).where(DeliveryLog.trip_id == trip.id)).all()
-        if any(entry.level == 2 for entry in logs):
-            continue  # already escalated
-        if not any(entry.level == 1 and entry.status != "no_buddies" for entry in logs):
+        logs = [
+            entry
+            for entry in db.scalars(select(DeliveryLog).where(DeliveryLog.trip_id == trip.id)).all()
+            if entry.status != "no_buddies"
+        ]
+        if not logs:
             continue
         if any(entry.acknowledged_at for entry in logs):
             continue  # a buddy has seen it
-        if as_utc(trip.alerted_at) > cutoff:
+        if len(logs) >= settings.max_buddies:
+            continue  # everyone has been alerted
+        last = max(logs, key=lambda entry: entry.level)
+        waited_since = trip.alerted_at if last.level == 1 else last.created_at
+        if as_utc(waited_since) > cutoff:
             continue  # not waited long enough
-        buddies = confirmed_buddies(db, trip.user_id)
-        if len(buddies) < 2:
+        already = {entry.buddy_email for entry in logs}
+        nxt = next((b for b in confirmed_buddies(db, trip.user_id) if b.email not in already), None)
+        if nxt is None:
             continue
-        log = DeliveryLog(trip_id=trip.id, buddy_email=buddies[1].email, level=2)
+        log = DeliveryLog(trip_id=trip.id, buddy_email=nxt.email, level=last.level + 1)
         db.add(log)
         db.commit()
         _attempt(db, log, trip, db.get(User, trip.user_id))

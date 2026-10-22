@@ -1,5 +1,5 @@
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -14,7 +14,6 @@ from .scheduler import scheduler_loop
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)  # we'll switch to Alembic migrations later
-    yield
     task = asyncio.create_task(scheduler_loop()) if settings.scheduler_enabled else None
     yield
     if task:
@@ -22,6 +21,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, version="0.8.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.frontend_url, "http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(auth.router)
 app.include_router(buddies.router) 
 app.include_router(trips.router)
