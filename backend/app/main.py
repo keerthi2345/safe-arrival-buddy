@@ -34,7 +34,7 @@ app.include_router(users.router)
 app.include_router(watch.router)
 app.include_router(demo.router)
 
-@app.get("/health", tags=["system"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["system"])
 def health(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))
     return {"status": "ok", "app": settings.app_name}
