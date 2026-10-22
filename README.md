@@ -4,8 +4,8 @@ A calm, privacy-friendly way to let people know you got home safely.
 
 Instead of tracking your location, you set a deadline ("home by 9:15 pm") and tap **I'm safe** when you arrive. If the deadline plus a grace period passes with no tap, the server emails your trusted buddies one after another until someone responds.
 
-**Live demo:** https://YOUR-APP.vercel.app
-**API docs (Swagger):** https://YOUR-API.onrender.com/docs
+**Live demo:** https://safe-arrival-buddy.vercel.app/
+**API docs (Swagger):** https://safe-arrival-api.onrender.com/docs
 
 > The backend runs on a free hosting plan that sleeps when idle. The first request after a quiet period can take up to a minute.
 
